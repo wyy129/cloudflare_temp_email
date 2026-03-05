@@ -50,7 +50,11 @@ jobs:
           export debug_mode=${{ secrets.DEBUG_MODE }}
           export use_mail_wasm_parser=${{ secrets.BACKEND_USE_MAIL_WASM_PARSER }}
           cd worker/
+          
+          # 生成 wrangler 配置文件
           echo '${{ secrets.BACKEND_TOML }}' > wrangler.toml
+          
+          # 安装 worker 依赖
           pnpm install --no-frozen-lockfile
 
           if [ -n "$use_mail_wasm_parser" ]; then
@@ -60,16 +64,9 @@ jobs:
             echo "Applied mail-parser-wasm-worker patch"
           fi
 
-          if [ "$debug_mode" = "true" ]; then
-            pnpm run deploy
-          else
-            output=$(pnpm run deploy 2>&1)
-            if [ $? -ne 0 ]; then
-                code=$?
-                echo "Command failed with exit code $code"
-                exit $code
-            fi
-          fi
+          # 👇 直接执行部署命令，如果报错会直接暴露在日志中
+          pnpm run deploy
+          
           echo "Deployed for tag ${{ github.ref_name }}"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
